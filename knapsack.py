@@ -1,22 +1,28 @@
 from random import randint
 from fractions import gcd
+from modtools import *
 
-def decrypt(message, privkey):
-	return False
+def decrypt(c, w, r, q):
+	plaintext = [0]*len(w)
+	ctext = (c * modinv(r, q)) % q
 
-def encrypt(message, pubkey):
-	sum = 0
-	for i in range(len(message)):
-		sum += message[i] * pubkey[i]
-	return sum
+	while(ctext > 0):
+		y = max(x for x in w if x <= ctext)
+		ctext -= y
+		plaintext[w.index(y)] = 1
 
-def binarize(message):
-	return [int(i) for i in "{:08b}".format(message)]
+	return plaintext
+
+def encrypt(m, B):
+	return sum([m[i] * B[i] for i in range(len(m))])
+
+def binarize(m):
+	return [int(i) for i in "{:08b}".format(m)]
 
 def generate_keys(n):
-	w = [random.randint(1, 10)]
+	w = [randint(1, 10)]
 	multiplier = randint(2, 4)
-	for i in range(n):
+	for i in range(n - 1):
 		w += [randint(sum(w), multiplier*sum(w))]
 
 	q = randint(sum(w), multiplier*sum(w))
@@ -30,9 +36,8 @@ def generate_keys(n):
 	return B, w, q, r
 
 if __name__ == "__main__":
-	q = 881
-	r = 588
-	w = [2, 7, 11, 21, 42, 89, 180, 354]
-	B = [295, 592, 301, 14, 28, 353, 120, 236]
-	message = binarize(97)
-	print(encrypt(message, B))
+	B, w, q, r = generate_keys(8)
+	m = binarize(97)
+	c = encrypt(m, B)
+	p = decrypt(c, w, r, q)
+	print(c, p)
